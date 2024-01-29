@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Messenger</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #container {
+      display: flex;
+      justify-content: space-between;
+      width: 80%;
+      margin-top: 20px;
+    }
+
+    #messages {
+      flex: 1;
+      margin-right: 20px;
+    }
+
+    #online-clients {
+      flex-basis: 30%;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <ul id="messages"></ul>
+    <div>
+      <h3>Online Clients:</h3>
+      <ul id="online-clients"></ul>
+    </div>
+  </div>
+  <form id="form" action="">
+    <input id="m" autocomplete="off" /><button>Send</button>
+  </form>
+
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    $(function () {
+      const socket = io();
+      let username = '';
+
+      // Display prompt and ask for a username when connected
+      socket.on('request username', function () {
+        while (!username) {
+          username = prompt('Please enter your username:');
+        }
+        socket.emit('send username', username);
+      });
+
+      // Inform the user that the chosen username is already taken
+      socket.on('username taken', function () {
+        alert('The chosen username is already taken. Please choose another one.');
+        location.reload(); // Reload the page after alert
+      });
+
+      $('form').submit(function () {
+        socket.emit('chat message', $('#m').val());
+        $('#m').val('');
+        return false;
+      });
+
+      socket.on('chat history', function (history) {
+        // Display existing messages
+        history.forEach(function (msg) {
+          $('#messages').append($('<li>').text(formatMessage(msg)));
+        });
+      });
+
+      socket.on('chat message', function (msg) {
+        // Display the new message
+        $('#messages').append($('<li>').text(formatMessage(msg)));
+      });
+
+      socket.on('online clients', function (clients) {
+        // Update the list of online clients
+        updateOnlineClients(clients);
+      });
+
+      // Helper function to format the message text and timestamp
+      function formatMessage(msg) {
+        return `${new Date(msg.timestamp).toLocaleTimeString()} (${msg.senderUsername}): ${msg.text}`;
+      }
+
+      // Helper function to update the list of online clients
+      function updateOnlineClients(clients) {
+        $('#online-clients').empty();
+        clients.forEach(function (client) {
+          $('#online-clients').append($('<li>').text(`${client.username} (${client.ip})`));
+        });
+      }
+    });
+  </script>
+</body>
+</html>
