@@ -1,4 +1,4 @@
-#Simple Messenger
+# Simple Messenger
 This is a simple real-time messenger web app for local network communication. It allows users connected to the same local network to chat with each other in real-time.
 
 Features
