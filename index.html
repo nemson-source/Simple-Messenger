@@ -39,26 +39,21 @@
   <form id="form" action="">
     <input id="m" autocomplete="off" /><button>Send</button>
   </form>
-
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     $(function () {
       const socket = io();
       let username = '';
-
-      // Display prompt and ask for a username when connected
       socket.on('request username', function () {
         while (!username) {
           username = prompt('Please enter your username:');
         }
         socket.emit('send username', username);
       });
-
-      // Inform the user that the chosen username is already taken
       socket.on('username taken', function () {
         alert('The chosen username is already taken. Please choose another one.');
-        location.reload(); // Reload the page after alert
+        location.reload();
       });
 
       $('form').submit(function () {
@@ -68,28 +63,21 @@
       });
 
       socket.on('chat history', function (history) {
-        // Display existing messages
         history.forEach(function (msg) {
           $('#messages').append($('<li>').text(formatMessage(msg)));
         });
       });
 
       socket.on('chat message', function (msg) {
-        // Display the new message
         $('#messages').append($('<li>').text(formatMessage(msg)));
       });
 
       socket.on('online clients', function (clients) {
-        // Update the list of online clients
         updateOnlineClients(clients);
       });
-
-      // Helper function to format the message text and timestamp
       function formatMessage(msg) {
         return `${new Date(msg.timestamp).toLocaleTimeString()} (${msg.senderUsername}): ${msg.text}`;
       }
-
-      // Helper function to update the list of online clients
       function updateOnlineClients(clients) {
         $('#online-clients').empty();
         clients.forEach(function (client) {
